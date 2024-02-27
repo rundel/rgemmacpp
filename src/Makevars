@@ -1,0 +1,7 @@
+PKG_CPPFLAGS =  -I../inst/include/
+PKG_LIBS = gemmacpp/build/libgemma.a gemmacpp/build/_deps/highway-build/libhwy.a gemmacpp/build/_deps/sentencepiece-build/src/libsentencepiece.a
+
+all: clean
+
+clean:
+	rm -f $(SHLIB) $(OBJECTS)

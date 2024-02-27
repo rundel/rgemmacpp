@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Library settings
+PKG_CONFIG_NAME="rgemmacpp"
+PKG_LIBS="gemmacpp/build/libgemma.a gemmacpp/build/_deps/highway-build/libhwy.a gemmacpp/build/_deps/sentencepiece-build/src/libsentencepiece.a"
+PKG_CFLAGS=""
+
+cd src/gemmacpp
+cmake -B build
+cd build
+make -j6
+
+cd ../../..
+
+mkdir -p inst/include
+cp -r src/gemmacpp/*.h inst/include
+cp -r src/gemmacpp/util inst/include
+cp -r src/gemmacpp/compression inst/include
+cp -r src/gemmacpp/build/_deps/highway-src/hwy inst/include
+cp -r src/gemmacpp/build/_deps/sentencepiece-src/src inst/include
+
+rm -f inst/include/hwy/*.cc
+rm -f inst/include/src/*.cc
+
+
+# Write to Makevars
+sed -e "s|@cflags@|$PKG_CFLAGS|" -e "s|@libs@|$PKG_LIBS|" src/Makevars.in > src/Makevars
+
+# Success
+echo "Configuration OK!"
+exit 0
