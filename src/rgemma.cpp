@@ -59,6 +59,8 @@ struct gemma_interface {
   int prompt_size;
   std::mt19937 gen;
 
+  std::vector<int> prompt;
+
   std::stringstream cur_response;
   std::vector<std::string> responses;
 
@@ -107,7 +109,7 @@ struct gemma_interface {
     }
   }
 
-  std::string prompt(std::string prompt_string) {
+  std::string send_prompt(std::string prompt_string) {
 
     // callback function invoked for each generated token.
     auto stream_token = [this](int token, float) {
@@ -117,10 +119,11 @@ struct gemma_interface {
       int& current_pos = this->current_pos;
       int prompt_size = this->prompt_size;
 
-
       ++abs_pos;
       ++current_pos;
-      if (token == gcpp::EOS_ID) {
+      if (current_pos < prompt_size) {
+        //Rcpp::Rcerr << "." << std::flush;
+      } else if (token == gcpp::EOS_ID) {
         if (!inference.multiturn) {
           abs_pos = 0;
           if (inference.deterministic) {
@@ -150,7 +153,7 @@ struct gemma_interface {
                   << "Use a larger value if desired using the --max_tokens command line flag.\n";
     }
 
-    std::vector<int> prompt;
+    prompt.clear();
     current_pos = 0;
 
     //if (prompt_string == "%q" || prompt_string == "%Q") {
@@ -175,7 +178,7 @@ struct gemma_interface {
     }
 
     HWY_ASSERT(model->Tokenizer().Encode(prompt_string, &prompt).ok());
-
+    
     // For both pre-trained and instruction-tuned models: prepend "<bos>" token
     // if needed.
     if (abs_pos == 0) {
@@ -183,27 +186,38 @@ struct gemma_interface {
     }
 
     prompt_size = prompt.size();
-
-    //Rcpp::Rcout << "\nPrompt string:\n" 
-    //  << "-------\n" 
-    //  << prompt_string << std::endl 
-    //  << "-------\n" 
-    //  << std::flush;
     
+    Rcpp::Rcout << prompt.size() << std::endl;
     GenerateGemma(*model, inference, prompt, abs_pos, pool, inner_pool, stream_token, accept_token, gen, 1);
-    
+    Rcpp::Rcout << std::endl << prompt.size() << std::endl;
+
     std::string res = cur_response.str();
 
     cur_response.str("");
     cur_response.clear();
     
-    //prompt_string = 
+    //prompt_string += res + "<end_of_turn>\n";
 
     responses.push_back(res);
 
     return res;
   }
+
+  std::string get_prompt() {
+    std::string res;
+    auto& tokenizer = model->Tokenizer();
+    //for(int i : prompt) {
+      std::string token_text;
+      HWY_ASSERT(tokenizer.Decode(prompt, &token_text).ok());
+    //  res += token_text;
+    //}
+  
+    return token_text;
+  }
 };
+
+
+
 
 // [[Rcpp::export]]
 std::vector<std::string> gemmacpp(Rcpp::List args, std::string prompt, int verbosity = 1) {
@@ -214,9 +228,9 @@ std::vector<std::string> gemmacpp(Rcpp::List args, std::string prompt, int verbo
     args_vec.push_back(std::string(args[i]));
   }
 
-  //for(auto& x : args_vec) {
-  //  Rcpp::Rcout << "\"" << x << "\"" << std::endl;
-  //}
+  for(auto& x : args_vec) {
+    Rcpp::Rcout << "\"" << x << "\"" << std::endl;
+  }
 
   int argc = args_vec.size();
   std::vector<const char*> argv;
@@ -228,9 +242,14 @@ std::vector<std::string> gemmacpp(Rcpp::List args, std::string prompt, int verbo
 
   obj.show_config();
 
-  obj.prompt(prompt);
+  //obj.prompt("How are you doing?");
+  //obj.prompt("What was the last question I asked?");
 
-  obj.prompt(prompt);
+  obj.send_prompt("There are 5 dogs in the park.");
+  Rcpp::Rcout << obj.get_prompt() << std::endl << std::endl;
+
+  obj.send_prompt("How many dogs are in the park?");
+  Rcpp::Rcout << obj.get_prompt() << std::endl << std::endl;
 
   return obj.responses;
 }
