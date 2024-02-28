@@ -22,22 +22,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// test
-void test(std::string tokenizer, std::string compressed_weights, std::string model);
-RcppExport SEXP _rgemmacpp_test(SEXP tokenizerSEXP, SEXP compressed_weightsSEXP, SEXP modelSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type tokenizer(tokenizerSEXP);
-    Rcpp::traits::input_parameter< std::string >::type compressed_weights(compressed_weightsSEXP);
-    Rcpp::traits::input_parameter< std::string >::type model(modelSEXP);
-    test(tokenizer, compressed_weights, model);
-    return R_NilValue;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rgemmacpp_gemmacpp", (DL_FUNC) &_rgemmacpp_gemmacpp, 2},
-    {"_rgemmacpp_test", (DL_FUNC) &_rgemmacpp_test, 3},
     {NULL, NULL, 0}
 };
 

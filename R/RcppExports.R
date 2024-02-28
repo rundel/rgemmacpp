@@ -5,7 +5,3 @@ gemmacpp <- function(args, prompts) {
     .Call(`_rgemmacpp_gemmacpp`, args, prompts)
 }
 
-test <- function(tokenizer, compressed_weights, model) {
-    invisible(.Call(`_rgemmacpp_test`, tokenizer, compressed_weights, model))
-}
-
