@@ -20,14 +20,11 @@
 
 struct gemma_interface {
   std::unique_ptr<gcpp::Gemma> model;
-  //gcpp::Gemma model;
-
-  gcpp::LoaderArgs loader;
-  gcpp::InferenceArgs inference;
-  gcpp::AppArgs app;
-
-  hwy::ThreadPool inner_pool;
-  hwy::ThreadPool pool;
+  std::unique_ptr<gcpp::LoaderArgs> loader;
+  std::unique_ptr<gcpp::InferenceArgs> inference;
+  std::unique_ptr<gcpp::AppArgs> app;
+  std::unique_ptr<hwy::ThreadPool> inner_pool;
+  std::unique_ptr<hwy::ThreadPool> pool;
 
   gcpp::AcceptFunc accept_token;
 
@@ -40,27 +37,55 @@ struct gemma_interface {
 
   std::stringstream cur_response;
   std::vector<std::string> responses;
+  std::vector<std::string> prompts;
+
+  std::vector<std::string> arg_vec;
+
+  std::vector<const char*> build_args(Rcpp::List const& args) {
+    arg_vec.push_back("gemma");
+
+    Rcpp::CharacterVector args_names = args.names();
+    for (int i=0; i!=args.size(); ++i) {
+      arg_vec.push_back("--" + std::string(args_names[i]));
+      arg_vec.push_back(std::string(args[i]));
+    }
+
+    std::vector<const char*> argv;
+    for (auto& arg : arg_vec) {
+      argv.push_back(arg.c_str());
+    }
+
+    return argv;
+  }
 
   gemma_interface(
-    int argc, char** argv
-  ) : loader(argc, argv), inference(argc, argv), app(argc, argv),
-      inner_pool(0), pool(app.num_threads), //model(loader, pool),
-      abs_pos(0), current_pos(0), prompt_size(0)
+    Rcpp::List args
+  ) : abs_pos(0), current_pos(0), prompt_size(0)
   {
+    auto argv = build_args(args);
+    int argc = argv.size();
+
+    loader    = std::unique_ptr<gcpp::LoaderArgs>(new gcpp::LoaderArgs(argc, (char**) &argv[0]));
+    inference = std::unique_ptr<gcpp::InferenceArgs>(new gcpp::InferenceArgs(argc, (char**) &argv[0]));
+    app       = std::unique_ptr<gcpp::AppArgs>(new gcpp::AppArgs(argc, (char**) &argv[0]));
+
+    inner_pool = std::unique_ptr<hwy::ThreadPool>(new hwy::ThreadPool(0));
+    pool       = std::unique_ptr<hwy::ThreadPool>(new hwy::ThreadPool(app->num_threads));
+
     // For many-core, pinning threads to cores helps.
-    if (app.num_threads > 10) {
-      gcpp::PinThreadToCore(app.num_threads - 1);  // Main thread
-      pool.Run(
-        0, pool.NumThreads(),
+    if (app->num_threads > 10) {
+      gcpp::PinThreadToCore(app->num_threads - 1);  // Main thread
+      pool->Run(
+        0, pool->NumThreads(),
         [](uint64_t /*task*/, size_t thread) { gcpp::PinThreadToCore(thread); }
       );
     }
 
-    model = std::unique_ptr<gcpp::Gemma>(new gcpp::Gemma(loader, pool));
+    model = std::unique_ptr<gcpp::Gemma>(new gcpp::Gemma(*loader, *pool));
 
     accept_token = [](int) { return true; };
 
-    if (inference.deterministic) {
+    if (inference->deterministic) {
       gen.seed(42);
     } else {
       std::random_device rd;
@@ -68,12 +93,14 @@ struct gemma_interface {
     }
   }
 
-  void show_config() {
-    loader.Print(app.verbosity);
-    inference.Print(app.verbosity);
-    app.Print(app.verbosity);
+  void print_config() {
+    int verbosity = app->verbosity;
 
-    if (app.verbosity >= 2) {
+    loader->Print(verbosity);
+    inference->Print(verbosity);
+    app->Print(verbosity);
+
+    if (verbosity >= 2) {
       time_t now = time(nullptr);
       char* dt = ctime(&now);  // NOLINT
       Rcpp::Rcout << "Date & Time                   : " << dt
@@ -101,9 +128,9 @@ struct gemma_interface {
       if (current_pos < prompt_size) {
         //Rcpp::Rcerr << "." << std::flush;
       } else if (token == gcpp::EOS_ID) {
-        if (!inference.multiturn) {
+        if (!inference->multiturn) {
           abs_pos = 0;
-          if (inference.deterministic) {
+          if (inference->deterministic) {
             gen.seed(42);
           }
         }
@@ -124,23 +151,17 @@ struct gemma_interface {
       return true;
     };
 
-
-    if (abs_pos > inference.max_tokens) {
-      Rcpp::Rcout << "max_tokens (" << inference.max_tokens << ") exceeded.\n"
+    if (abs_pos > inference->max_tokens) {
+      Rcpp::Rcout << "max_tokens (" << inference->max_tokens << ") exceeded.\n"
                   << "Use a larger value if desired using the --max_tokens command line flag.\n";
     }
 
-    prompt.clear();
     current_pos = 0;
+    prompts.push_back(prompt_string);
 
-    //if (prompt_string == "%q" || prompt_string == "%Q") {
-    //  return;
-    //}
-
-    //if (prompt_string == "%c" || prompt_string == "%C") {
-    //  abs_pos = 0;
-    //  continue;
-    //}
+    if (prompt_string == "%c" || prompt_string == "%C") {
+      abs_pos = 0;
+    }
 
     if (model->model_training == gcpp::ModelTraining::GEMMA_IT) {
       // For instruction-tuned models: add control tokens.
@@ -163,7 +184,7 @@ struct gemma_interface {
     }
 
     prompt_size = prompt.size();
-    GenerateGemma(*model, inference, prompt, abs_pos, pool, inner_pool, stream_token, accept_token, gen, 1);
+    GenerateGemma(*model, *inference, prompt, abs_pos, *pool, *inner_pool, stream_token, accept_token, gen, 1);
     Rcpp::Rcout << std::endl << std::endl;
 
     std::string res = cur_response.str();
@@ -177,50 +198,41 @@ struct gemma_interface {
   std::string get_prompt() {
     std::string res;
     auto& tokenizer = model->Tokenizer();
-    //for(int i : prompt) {
-      std::string token_text;
-      HWY_ASSERT(tokenizer.Decode(prompt, &token_text).ok());
-    //  res += token_text;
-    //}
+
+    std::string token_text;
+    HWY_ASSERT(tokenizer.Decode(prompt, &token_text).ok());
 
     return token_text;
   }
+
+  void reset() {
+    current_pos = 0;
+    abs_pos = 0;
+    responses.clear();
+    prompts.clear();
+  }
+
+  Rcpp::List status() {
+    Rcpp::List L = Rcpp::List::create(
+      Rcpp::Named("current_pos") = current_pos,
+      Rcpp::Named("abs_pos") = abs_pos,
+      Rcpp::Named("prompts") = prompts,
+      Rcpp::Named("responses") = responses
+    );
+
+    return L;
+  }
 };
 
+RCPP_MODULE(mod_gemma) {
+  using namespace Rcpp;
 
-
-
-// [[Rcpp::export]]
-std::vector<std::string> gemmacpp(Rcpp::List args, std::vector<std::string> prompts) {
-  std::vector<std::string> args_vec = {"gemma"};
-  Rcpp::CharacterVector args_names = args.names();
-  for (int i=0; i!=args.size(); ++i) {
-    args_vec.push_back("--" + std::string(args_names[i]));
-    args_vec.push_back(std::string(args[i]));
-  }
-
-  //for(auto& x : args_vec) {
-  //  Rcpp::Rcout << "\"" << x << "\"" << std::endl;
-  //}
-
-  int argc = args_vec.size();
-  std::vector<const char*> argv;
-  for (auto& arg : args_vec) {
-    argv.push_back(arg.c_str());
-  }
-
-  gemma_interface obj(argc, (char**) &argv[0]);
-
-  obj.show_config();
-
-  //obj.prompt("How are you doing?");
-  //obj.prompt("What was the last question I asked?");
-
-  for(auto& p : prompts) {
-    obj.send_prompt(p);
-    Rcpp::Rcout << obj.get_prompt() << std::endl << std::endl;
-  }
-
-  return obj.responses;
+  class_<gemma_interface>("gemma_interface")
+  .constructor<Rcpp::List>()
+  .method("send_prompt", &gemma_interface::send_prompt)
+  .method("get_prompt", &gemma_interface::get_prompt)
+  .method("reset", &gemma_interface::reset)
+  .method("status", &gemma_interface::status)
+  .method("print_config", &gemma_interface::print_config)
+  ;
 }
-

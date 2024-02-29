@@ -10,21 +10,11 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// gemmacpp
-std::vector<std::string> gemmacpp(Rcpp::List args, std::vector<std::string> prompts);
-RcppExport SEXP _rgemmacpp_gemmacpp(SEXP argsSEXP, SEXP promptsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type args(argsSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type prompts(promptsSEXP);
-    rcpp_result_gen = Rcpp::wrap(gemmacpp(args, prompts));
-    return rcpp_result_gen;
-END_RCPP
-}
+
+RcppExport SEXP _rcpp_module_boot_mod_gemma();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rgemmacpp_gemmacpp", (DL_FUNC) &_rgemmacpp_gemmacpp, 2},
+    {"_rcpp_module_boot_mod_gemma", (DL_FUNC) &_rcpp_module_boot_mod_gemma, 0},
     {NULL, NULL, 0}
 };
 
