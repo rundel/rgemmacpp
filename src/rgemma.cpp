@@ -236,3 +236,4 @@ RCPP_MODULE(mod_gemma) {
   .method("print_config", &gemma_interface::print_config)
   ;
 }
+

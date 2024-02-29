@@ -1,4 +1,4 @@
-PKG_CPPFLAGS = -Ibuild/_deps/gemma-src/ -Ibuild/_deps/highway-src/hwy/ -Ibuild/_deps/sentencepiece-src/src/ -I../inst/include/
+PKG_CPPFLAGS = -Ibuild/_deps/gemma-src/ -Ibuild/_deps/highway-src/ -Ibuild/_deps/sentencepiece-src/ -I../inst/include/
 PKG_LIBS = build/_deps/gemma-build/libgemma.a build/_deps/highway-build/libhwy.a build/_deps/sentencepiece-build/src/libsentencepiece.a
 
 all: clean
