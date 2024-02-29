@@ -13,9 +13,9 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 The goal of rgemmacpp is to provide a very basic wrapper around the CLI
 of Google’s [gemma.cpp](https://github.com/google/gemma.cpp).
 
-The gemma.cpp code is included as a git submodule of this project and
-the existing cmake build system is used to compile all gemma.cpp related
-code as static libraries.
+The gemma.cpp code is included via cmake which then uses the existing
+build system to compile all gemma.cpp related code as static libraries
+which are then linked.
 
 This is still very much a work in progress / proof of concept.
 
