@@ -33,7 +33,7 @@ struct gemma_interface {
   int prompt_size;
   std::mt19937 gen;
 
-  std::vector<int> prompt;
+  std::vector<int> prompt_tokens;
 
   std::stringstream cur_response;
   std::vector<std::string> responses;
@@ -113,7 +113,7 @@ struct gemma_interface {
     }
   }
 
-  std::string send_prompt(std::string prompt_string) {
+  std::string prompt(std::string prompt_string) {
 
     // callback function invoked for each generated token.
     auto stream_token = [this](int token, float) {
@@ -175,16 +175,16 @@ struct gemma_interface {
       }
     }
 
-    HWY_ASSERT(model->Tokenizer().Encode(prompt_string, &prompt).ok());
+    HWY_ASSERT(model->Tokenizer().Encode(prompt_string, &prompt_tokens).ok());
 
     // For both pre-trained and instruction-tuned models: prepend "<bos>" token
     // if needed.
     if (abs_pos == 0) {
-      prompt.insert(prompt.begin(), 2);
+      prompt_tokens.insert(prompt_tokens.begin(), 2);
     }
 
-    prompt_size = prompt.size();
-    GenerateGemma(*model, *inference, prompt, abs_pos, *pool, *inner_pool, stream_token, accept_token, gen, 1);
+    prompt_size = prompt_tokens.size();
+    GenerateGemma(*model, *inference, prompt_tokens, abs_pos, *pool, *inner_pool, stream_token, accept_token, gen, 1);
     Rcpp::Rcout << std::endl << std::endl;
 
     std::string res = cur_response.str();
@@ -195,12 +195,12 @@ struct gemma_interface {
     return res;
   }
 
-  std::string get_prompt() {
+  std::string last_raw_prompt() {
     std::string res;
     auto& tokenizer = model->Tokenizer();
 
     std::string token_text;
-    HWY_ASSERT(tokenizer.Decode(prompt, &token_text).ok());
+    HWY_ASSERT(tokenizer.Decode(prompt_tokens, &token_text).ok());
 
     return token_text;
   }
@@ -229,8 +229,8 @@ RCPP_MODULE(mod_gemma) {
 
   class_<gemma_interface>("gemma_interface")
   .constructor<Rcpp::List>()
-  .method("send_prompt", &gemma_interface::send_prompt)
-  .method("get_prompt", &gemma_interface::get_prompt)
+  .method("prompt", &gemma_interface::prompt)
+  .method("last_raw_prompt", &gemma_interface::last_raw_prompt)
   .method("reset", &gemma_interface::reset)
   .method("status", &gemma_interface::status)
   .method("print_config", &gemma_interface::print_config)
