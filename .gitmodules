@@ -1,3 +1,0 @@
-[submodule "src/gemmacpp"]
-	path = src/gemmacpp
-	url = https://github.com/google/gemma.cpp.git
