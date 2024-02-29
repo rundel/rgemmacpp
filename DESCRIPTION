@@ -15,3 +15,4 @@ LinkingTo:
 Imports: 
     Rcpp
 SystemRequirements: C++17
+URL: https://rundel.github.io/rgemmacpp/
