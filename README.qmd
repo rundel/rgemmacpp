@@ -59,9 +59,12 @@ m = gemma(
   multiturn="1"
 )
 
-r = m$prompt("What are top 5 places I should visit in Durham, NC?")
+m$prompt("What are top 5 places I should visit in Durham, NC?")
 
-r = m$prompt("Which of the previous locations are best for kids?")
+m$prompt("Which of the previous locations are best for kids?")
+
+m$prompts
+m$responses
 ```
 
 ### 7b model
@@ -74,7 +77,33 @@ m = gemma(
   multiturn="1"
 )
 
-r = m$prompt("What are top 5 places I should visit in Durham, NC?")
+m$prompt("What are top 5 places I should visit in Durham, NC?")
 
-r = m$prompt("Which of the previous locations are best for kids?")
+m$prompt("Which of the previous locations are best for kids?")
+
+m$prompts
+m$responses
+```
+
+### Configuration options
+
+All of the currently available configuration options can be explored through the `gemma_args()` function:
+
+```{r}
+gemma_args()
+```
+
+Once a model has been constructed the configuration can be viewed with 
+
+```{r}
+m = gemma(
+  tokenizer="~/Scratch/gemma/tokenizer.spm",
+  compressed_weights="~/Scratch/gemma/2b-it-sfp.sbs",
+  model="2b-it",
+  multiturn="1"
+)
+
+m$print_config()
+
+m$get_config()
 ```

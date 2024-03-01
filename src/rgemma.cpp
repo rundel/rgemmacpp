@@ -78,10 +78,43 @@ Rcpp::DataFrame arg_help() {
     Rcpp::Named("help") = Rcpp::wrap(visitor.help)
   );
 
-  df.attr("class") = Rcpp::CharacterVector({"tbl_df","tbl","data.frame"});
-
   return df;
 }
+
+
+class RcppConfigVisitor {
+public:
+  mutable Rcpp::List settings;
+
+  // Non-string value
+  template <typename T>
+  void operator()(
+      const T& t, const char* name, const T& init,
+      const char* help, int print_verbosity = 0
+  ) const {
+    if (t != init)
+      settings[name] = std::to_string(t);
+  }
+
+  // string value
+  void operator()(
+      const std::string& t, const char* name,
+      const std::string& init, const char* help,
+      int print_verbosity = 0
+  ) const {
+    if (t != init)
+      settings[name] = t;
+  }
+
+  // Path value
+  void operator()(
+      const gcpp::Path& t, const char* name, const gcpp::Path& init,
+      const char* help, int print_verbosity = 0
+  ) const {
+    if (t.path != init.path)
+      settings[name] = t.path;
+  }
+};
 
 
 
@@ -90,8 +123,8 @@ public:
   // Non-string value
   template <typename T>
   void operator()(
-    const T& t, const char* name, const T& /*init*/,
-    const char* /*help*/, int print_verbosity = 0
+    const T& t, const char* name, const T& init,
+    const char* help, int print_verbosity = 0
   ) const {
 
     Rcpp::Rcout << std::left << std::setw(24) << name;
@@ -101,7 +134,7 @@ public:
   // string value
   void operator()(
     const std::string& t, const char* name,
-    const std::string& /*init*/, const char* /*help*/,
+    const std::string& init, const char* help,
     int print_verbosity = 0
   ) const {
     Rcpp::Rcout << std::left << std::setw(24) << name;
@@ -110,8 +143,8 @@ public:
 
   // Path value
   void operator()(
-    const gcpp::Path& t, const char* name, const gcpp::Path& /*init*/,
-    const char* /*help*/, int print_verbosity = 0
+    const gcpp::Path& t, const char* name, const gcpp::Path& init,
+    const char* help, int print_verbosity = 0
   ) const {
     Rcpp::Rcout << std::left << std::setw(24) << name;
     Rcpp::Rcout << " : " << t.Shortened() << std::endl;
@@ -194,6 +227,16 @@ struct gemma_interface {
     }
   }
 
+  Rcpp::List get_config() {
+    RcppConfigVisitor visitor;
+    loader->ForEach(visitor);
+    inference->ForEach(visitor);
+    app->ForEach(visitor);
+
+    return visitor.settings;
+  }
+
+
   void print_config() {
     int verbosity = app->verbosity;
 
@@ -215,7 +258,7 @@ struct gemma_interface {
     }
   }
 
-  std::string prompt(std::string prompt_string) {
+  void prompt(std::string prompt_string) {
 
     // callback function invoked for each generated token.
     auto stream_token = [this](int token, float) {
@@ -294,10 +337,10 @@ struct gemma_interface {
     cur_response.clear();
     responses.push_back(res);
 
-    return res;
+    //return res;
   }
 
-  std::string last_raw_prompt() {
+  std::string get_last_raw_prompt() {
     std::string res;
     auto& tokenizer = model->Tokenizer();
 
@@ -324,6 +367,14 @@ struct gemma_interface {
 
     return L;
   }
+
+  std::vector<std::string> get_prompts() {
+    return prompts;
+  }
+
+  std::vector<std::string> get_responses() {
+    return prompts;
+  }
 };
 
 RCPP_MODULE(mod_gemma) {
@@ -331,11 +382,14 @@ RCPP_MODULE(mod_gemma) {
 
   class_<gemma_interface>("gemma_interface")
   .constructor<Rcpp::List>()
+  .property("prompts", &gemma_interface::get_prompts)
+  .property("responses", &gemma_interface::get_responses)
   .method("prompt", &gemma_interface::prompt)
-  .method("last_raw_prompt", &gemma_interface::last_raw_prompt)
+  .method("get_last_raw_prompt", &gemma_interface::get_last_raw_prompt)
   .method("reset", &gemma_interface::reset)
   .method("status", &gemma_interface::status)
   .method("print_config", &gemma_interface::print_config)
+  .method("get_config", &gemma_interface::get_config)
   ;
 }
 
