@@ -1,4 +1,13 @@
-#' @export gemma
+#' @export
+gemma_args = function() {
+  df = arg_help()
+  df$help = stringr::str_squish(df$help)
+
+  df
+}
+
+
+#' @export
 gemma = function(tokenizer, compressed_weights, model, ...) {
 
   stopifnot(file.exists(tokenizer))
@@ -13,8 +22,10 @@ gemma = function(tokenizer, compressed_weights, model, ...) {
       compressed_weights=compressed_weights,
       model=model
     ),
-    list(...)
+    lapply(
+      list(...), as.character
+    )
   )
 
-  new(gemma_interface, args)
+  methods::new(gemma_interface, args)
 }

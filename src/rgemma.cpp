@@ -18,6 +18,107 @@
 #include "hwy/profiler.h"
 #include "hwy/timer.h"
 
+struct RcppArgVisitor {
+  mutable std::vector<std::string> arg;
+  mutable std::vector<std::string> help;
+  mutable std::vector<std::string> init;
+
+  // Non-string value
+  template <typename T>
+  void operator()(
+      const T& t, const char* name,
+      const T& init, const char* help,
+      int print_verbosity = 0
+  ) const {
+    this->arg.push_back(name);
+    this->help.push_back(help);
+    this->init.push_back(std::to_string(init));
+  }
+
+  // string value
+  void operator()(
+      const std::string& t, const char* name,
+      const std::string& init, const char* help,
+      int print_verbosity = 0
+  ) const {
+    this->arg.push_back(name);
+    this->help.push_back(help);
+    this->init.push_back(init);
+  }
+
+  // Path value
+  void operator()(
+      const gcpp::Path& t, const char* name,
+      const gcpp::Path& init, const char* help,
+      int print_verbosity = 0
+  ) const {
+    this->arg.push_back(name);
+    this->help.push_back(help);
+    this->init.push_back(init.path);
+  }
+
+};
+
+// [[Rcpp::export]]
+Rcpp::DataFrame arg_help() {
+  const char* argv[] = {"rgemmacpp"};
+
+  gcpp::LoaderArgs loader(1, (char **)argv);
+  gcpp::InferenceArgs inference(1, (char **)argv);
+  gcpp::AppArgs app(1, (char **)argv);
+
+  RcppArgVisitor visitor;
+  loader.ForEach(visitor);
+  inference.ForEach(visitor);
+  app.ForEach(visitor);
+
+  Rcpp::DataFrame df = Rcpp::DataFrame::create(
+    Rcpp::Named("arg") = Rcpp::wrap(visitor.arg),
+    Rcpp::Named("default") = Rcpp::wrap(visitor.init),
+    Rcpp::Named("help") = Rcpp::wrap(visitor.help)
+  );
+
+  df.attr("class") = Rcpp::CharacterVector({"tbl_df","tbl","data.frame"});
+
+  return df;
+}
+
+
+
+class RcppPrintVisitor {
+public:
+  // Non-string value
+  template <typename T>
+  void operator()(
+    const T& t, const char* name, const T& /*init*/,
+    const char* /*help*/, int print_verbosity = 0
+  ) const {
+
+    Rcpp::Rcout << std::left << std::setw(24) << name;
+    Rcpp::Rcout << " : " << std::to_string(t) << std::endl;
+  }
+
+  // string value
+  void operator()(
+    const std::string& t, const char* name,
+    const std::string& /*init*/, const char* /*help*/,
+    int print_verbosity = 0
+  ) const {
+    Rcpp::Rcout << std::left << std::setw(24) << name;
+    Rcpp::Rcout << " : \"" << t << "\"" <<std::endl;
+  }
+
+  // Path value
+  void operator()(
+    const gcpp::Path& t, const char* name, const gcpp::Path& /*init*/,
+    const char* /*help*/, int print_verbosity = 0
+  ) const {
+    Rcpp::Rcout << std::left << std::setw(24) << name;
+    Rcpp::Rcout << " : " << t.Shortened() << std::endl;
+  }
+};
+
+
 struct gemma_interface {
   std::unique_ptr<gcpp::Gemma> model;
   std::unique_ptr<gcpp::LoaderArgs> loader;
@@ -42,7 +143,7 @@ struct gemma_interface {
   std::vector<std::string> arg_vec;
 
   std::vector<const char*> build_args(Rcpp::List const& args) {
-    arg_vec.push_back("gemma");
+    arg_vec.push_back("rgemmacpp");
 
     Rcpp::CharacterVector args_names = args.names();
     for (int i=0; i!=args.size(); ++i) {
@@ -96,20 +197,21 @@ struct gemma_interface {
   void print_config() {
     int verbosity = app->verbosity;
 
-    loader->Print(verbosity);
-    inference->Print(verbosity);
-    app->Print(verbosity);
+    RcppPrintVisitor visitor;
+    loader->ForEach(visitor);
+    inference->ForEach(visitor);
+    app->ForEach(visitor);
 
     if (verbosity >= 2) {
-      time_t now = time(nullptr);
-      char* dt = ctime(&now);  // NOLINT
-      Rcpp::Rcout << "Date & Time                   : " << dt
-                  << "Prefill Token Batch Size      : " << gcpp::kPrefillBatchSize                    << std::endl
-                  << "Hardware concurrency          : " << std::thread::hardware_concurrency()        << std::endl
-                  << "Instruction set               : " << hwy::TargetName(hwy::DispatchedTarget())
+      //time_t now = time(nullptr);
+      //char* dt = ctime(&now);  // NOLINT
+      Rcpp::Rcout //<< "Date & Time              : " << dt
+                  << "Prefill Token Batch Size : " << gcpp::kPrefillBatchSize                    << std::endl
+                  << "Hardware concurrency     : " << std::thread::hardware_concurrency()        << std::endl
+                  << "Instruction set          : " << hwy::TargetName(hwy::DispatchedTarget())
                   << " (" << hwy::VectorBytes() * 8 << " bits)" << std::endl
-                  << "Weight Type                   : " << gcpp::TypeName(gcpp::WeightT())            << std::endl
-                  << "EmbedderInput Type            : " << gcpp::TypeName(gcpp::EmbedderInputT())     << std::endl;
+                  << "Weight Type              : " << gcpp::TypeName(gcpp::WeightT())            << std::endl
+                  << "Embedder Input Type      : " << gcpp::TypeName(gcpp::EmbedderInputT())     << std::endl;
     }
   }
 

@@ -6,4 +6,4 @@
 ^pkgdown$
 ^\.github$
 ^LICENSE\.md$
-^src/build/.*$
+^src/build

@@ -10,10 +10,21 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// arg_help
+Rcpp::DataFrame arg_help();
+RcppExport SEXP _rgemmacpp_arg_help() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(arg_help());
+    return rcpp_result_gen;
+END_RCPP
+}
 
 RcppExport SEXP _rcpp_module_boot_mod_gemma();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rgemmacpp_arg_help", (DL_FUNC) &_rgemmacpp_arg_help, 0},
     {"_rcpp_module_boot_mod_gemma", (DL_FUNC) &_rcpp_module_boot_mod_gemma, 0},
     {NULL, NULL, 0}
 };

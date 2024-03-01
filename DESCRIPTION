@@ -1,17 +1,19 @@
 Package: rgemmacpp
-Title: Wrapper for the gemma.cpp C++ library.
+Title: Wrapper for the gemma.cpp C++ library
 Version: 0.2.0.0
 Authors@R: 
     person("Colin", "Rundel", role = c("aut", "cre"),
            email = "rundel@gmail.com")
 Description: Interface to the basic prompt functionality of the gemma.cpp library.
-License: License: Apache License (>= 2)
+License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 LinkingTo: 
     Rcpp
 Imports: 
-    Rcpp
+    Rcpp,
+    stringr,
+    tibble
 SystemRequirements: C++17
 URL: https://rundel.github.io/rgemmacpp/
