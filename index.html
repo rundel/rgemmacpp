@@ -78,14 +78,14 @@
 <h3 id="id_2b-model">2b model<a class="anchor" aria-label="anchor" href="#id_2b-model"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">m</span> <span class="op">=</span> <span class="fu">gemma</span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="reference/gemma.html">gemma</a></span><span class="op">(</span></span>
 <span>  tokenizer<span class="op">=</span><span class="st">"~/Scratch/gemma/tokenizer.spm"</span>,</span>
 <span>  compressed_weights<span class="op">=</span><span class="st">"~/Scratch/gemma/2b-it-sfp.sbs"</span>,</span>
 <span>  model<span class="op">=</span><span class="st">"2b-it"</span>,</span>
 <span>  multiturn<span class="op">=</span><span class="st">"1"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">r</span> <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"What are top 5 places I should visit in Durham, NC?"</span><span class="op">)</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"What are top 5 places I should visit in Durham, NC?"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; 1. **Duke University Campus**</span></span>
 <span><span class="co">#&gt; 2. **Durham Performing Arts Center**</span></span>
@@ -93,22 +93,29 @@
 <span><span class="co">#&gt; 4. **The Duke Gardens**</span></span>
 <span><span class="co">#&gt; 5. **The American Tobacco Museum**</span></span>
 <span></span>
-<span><span class="va">r</span> <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"Which of the previous locations are best for kids?"</span><span class="op">)</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"Which of the previous locations are best for kids?"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; The Duke Gardens and the American Tobacco Museum are best for kids. The Duke Gardens offer a variety of activities for kids of all ages, including a children's garden, a playground, and a petting zoo. The American Tobacco Museum offers exhibits on the history of tobacco in Durham, including a factory tour and a museum shop.</span></span></code></pre></div>
+<span><span class="co">#&gt; The Duke Gardens and the American Tobacco Museum are best for kids. The Duke Gardens offer a variety of activities for kids of all ages, including a children's garden, a playground, and a petting zoo. The American Tobacco Museum offers exhibits on the history of tobacco in Durham, including a factory tour and a museum shop.</span></span>
+<span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="va">prompts</span></span>
+<span><span class="co">#&gt; [1] "What are top 5 places I should visit in Durham, NC?"</span></span>
+<span><span class="co">#&gt; [2] "Which of the previous locations are best for kids?"</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="va">responses</span></span>
+<span><span class="co">#&gt; [1] "What are top 5 places I should visit in Durham, NC?"</span></span>
+<span><span class="co">#&gt; [2] "Which of the previous locations are best for kids?"</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="id_7b-model">7b model<a class="anchor" aria-label="anchor" href="#id_7b-model"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">m</span> <span class="op">=</span> <span class="fu">gemma</span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="reference/gemma.html">gemma</a></span><span class="op">(</span></span>
 <span>  tokenizer<span class="op">=</span><span class="st">"~/Scratch/gemma/tokenizer.spm"</span>,</span>
 <span>  compressed_weights<span class="op">=</span><span class="st">"~/Scratch/gemma/7b-it-sfp.sbs"</span>,</span>
 <span>  model<span class="op">=</span><span class="st">"7b-it"</span>,</span>
 <span>  multiturn<span class="op">=</span><span class="st">"1"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">r</span> <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"What are top 5 places I should visit in Durham, NC?"</span><span class="op">)</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"What are top 5 places I should visit in Durham, NC?"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; 1. **Duke University Campus**</span></span>
 <span><span class="co">#&gt; 2. **The Museum of Life and Science**</span></span>
@@ -116,9 +123,76 @@
 <span><span class="co">#&gt; 4. **The North Carolina Museum of Gems**</span></span>
 <span><span class="co">#&gt; 5. **The Eno River Trail System**</span></span>
 <span></span>
-<span><span class="va">r</span> <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"Which of the previous locations are best for kids?"</span><span class="op">)</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="fu">prompt</span><span class="op">(</span><span class="st">"Which of the previous locations are best for kids?"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; The Museum of Life and Science, the Duke Gardens, and the North Carolina Museum of Gems are all great places for kids.</span></span></code></pre></div>
+<span><span class="co">#&gt; The Museum of Life and Science, the Duke Gardens, and the North Carolina Museum of Gems are all great places for kids.</span></span>
+<span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="va">prompts</span></span>
+<span><span class="co">#&gt; [1] "What are top 5 places I should visit in Durham, NC?"</span></span>
+<span><span class="co">#&gt; [2] "Which of the previous locations are best for kids?"</span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="va">responses</span></span>
+<span><span class="co">#&gt; [1] "What are top 5 places I should visit in Durham, NC?"</span></span>
+<span><span class="co">#&gt; [2] "Which of the previous locations are best for kids?"</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="configuration-options">Configuration options<a class="anchor" aria-label="anchor" href="#configuration-options"></a>
+</h3>
+<p>All of the currently available configuration options can be explored through the <code><a href="reference/gemma_args.html">gemma_args()</a></code> function:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/gemma_args.html">gemma_args</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 12 × 3</span></span>
+<span><span class="co">#&gt;    arg                  default                help                             </span></span>
+<span><span class="co">#&gt;    &lt;chr&gt;                &lt;chr&gt;                  &lt;chr&gt;                            </span></span>
+<span><span class="co">#&gt;  1 tokenizer            ""                     Path name of tokenizer model fil…</span></span>
+<span><span class="co">#&gt;  2 compressed_weights   ""                     Path name of compressed weights …</span></span>
+<span><span class="co">#&gt;  3 model                ""                     Model type 2b-it (2B parameters,…</span></span>
+<span><span class="co">#&gt;  4 weights              ""                     Path name of model weights (.sbs…</span></span>
+<span><span class="co">#&gt;  5 max_tokens           "3072"                 Maximum number of tokens in prom…</span></span>
+<span><span class="co">#&gt;  6 max_generated_tokens "2048"                 Maximum number of tokens to gene…</span></span>
+<span><span class="co">#&gt;  7 temperature          "1.000000"             Temperature for top-K            </span></span>
+<span><span class="co">#&gt;  8 deterministic        "0"                    Make top-k sampling deterministic</span></span>
+<span><span class="co">#&gt;  9 multiturn            "0"                    Multiturn mode (if 0, this clear…</span></span>
+<span><span class="co">#&gt; 10 verbosity            "1"                    Show verbose developer informati…</span></span>
+<span><span class="co">#&gt; 11 num_threads          "18446744073709551615" Number of threads to use. Defaul…</span></span>
+<span><span class="co">#&gt; 12 eot_line             ""                     End of turn line. When you speci…</span></span></code></pre></div>
+<p>Once a model has been constructed the configuration can be viewed with</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="reference/gemma.html">gemma</a></span><span class="op">(</span></span>
+<span>  tokenizer<span class="op">=</span><span class="st">"~/Scratch/gemma/tokenizer.spm"</span>,</span>
+<span>  compressed_weights<span class="op">=</span><span class="st">"~/Scratch/gemma/2b-it-sfp.sbs"</span>,</span>
+<span>  model<span class="op">=</span><span class="st">"2b-it"</span>,</span>
+<span>  multiturn<span class="op">=</span><span class="st">"1"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="fu">print_config</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; tokenizer                : /Users/rundel/Scratch/gemma/tokenizer.spm</span></span>
+<span><span class="co">#&gt; compressed_weights       : /Users/rundel/Scratch/gemma/2b-it-sfp.sbs</span></span>
+<span><span class="co">#&gt; model                    : "2b-it"</span></span>
+<span><span class="co">#&gt; weights                  : [no path specified]</span></span>
+<span><span class="co">#&gt; max_tokens               : 3072</span></span>
+<span><span class="co">#&gt; max_generated_tokens     : 2048</span></span>
+<span><span class="co">#&gt; temperature              : 1.000000</span></span>
+<span><span class="co">#&gt; deterministic            : 0</span></span>
+<span><span class="co">#&gt; multiturn                : 1</span></span>
+<span><span class="co">#&gt; verbosity                : 1</span></span>
+<span><span class="co">#&gt; num_threads              : 8</span></span>
+<span><span class="co">#&gt; eot_line                 : ""</span></span>
+<span></span>
+<span><span class="va">m</span><span class="op">$</span><span class="fu">get_config</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $tokenizer</span></span>
+<span><span class="co">#&gt; [1] "/Users/rundel/Scratch/gemma/tokenizer.spm"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $compressed_weights</span></span>
+<span><span class="co">#&gt; [1] "/Users/rundel/Scratch/gemma/2b-it-sfp.sbs"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $model</span></span>
+<span><span class="co">#&gt; [1] "2b-it"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $multiturn</span></span>
+<span><span class="co">#&gt; [1] "1"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $num_threads</span></span>
+<span><span class="co">#&gt; [1] "8"</span></span></code></pre></div>
 </div>
 </div>
 </div>
@@ -149,7 +223,6 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
-<li><a href="https://github.com/rundel/rgemmacpp/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/rundel/rgemmacpp/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
 
