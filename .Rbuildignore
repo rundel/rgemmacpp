@@ -7,3 +7,6 @@
 ^\.github$
 ^LICENSE\.md$
 ^src/build
+^README\.qmd$
+^test\.R$
+^rgemmacpp\.Rproj$
