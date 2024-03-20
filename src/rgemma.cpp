@@ -175,6 +175,9 @@ struct gemma_interface {
 
   std::vector<std::string> arg_vec;
 
+  gcpp::KVCache kv_cache;
+
+
   std::vector<const char*> build_args(Rcpp::List const& args) {
     arg_vec.push_back("rgemmacpp");
 
@@ -206,6 +209,8 @@ struct gemma_interface {
     inner_pool = std::unique_ptr<hwy::ThreadPool>(new hwy::ThreadPool(0));
     pool       = std::unique_ptr<hwy::ThreadPool>(new hwy::ThreadPool(app->num_threads));
 
+    kv_cache = CreateKVCache(loader->ModelType());
+
     // For many-core, pinning threads to cores helps.
     if (app->num_threads > 10) {
       gcpp::PinThreadToCore(app->num_threads - 1);  // Main thread
@@ -215,7 +220,10 @@ struct gemma_interface {
       );
     }
 
-    model = std::unique_ptr<gcpp::Gemma>(new gcpp::Gemma(*loader, *pool));
+    model = std::unique_ptr<gcpp::Gemma>(
+      new gcpp::Gemma(loader->tokenizer, loader->compressed_weights,
+                      loader->ModelType(), *pool)
+    );
 
     accept_token = [](int) { return true; };
 
@@ -262,7 +270,7 @@ struct gemma_interface {
 
     // callback function invoked for each generated token.
     auto stream_token = [this](int token, float) {
-      auto& tokenizer = this->model->Tokenizer();
+      auto const& tokenizer = this->model->Tokenizer();
 
       int& abs_pos = this->abs_pos;
       int& current_pos = this->current_pos;
@@ -281,7 +289,7 @@ struct gemma_interface {
         }
       } else {
         std::string token_text;
-        HWY_ASSERT(tokenizer.Decode(std::vector<int>{token}, &token_text).ok());
+        HWY_ASSERT(tokenizer->Decode(std::vector<int>{token}, &token_text).ok());
 
         // +1 since position is incremented above
         if (current_pos == prompt_size + 1) {
@@ -320,7 +328,7 @@ struct gemma_interface {
       }
     }
 
-    HWY_ASSERT(model->Tokenizer().Encode(prompt_string, &prompt_tokens).ok());
+    HWY_ASSERT(model->Tokenizer()->Encode(prompt_string, &prompt_tokens).ok());
 
     // For both pre-trained and instruction-tuned models: prepend "<bos>" token
     // if needed.
@@ -329,7 +337,13 @@ struct gemma_interface {
     }
 
     prompt_size = prompt_tokens.size();
-    GenerateGemma(*model, *inference, prompt_tokens, abs_pos, *pool, *inner_pool, stream_token, accept_token, gen, 1);
+    //GenerateGemma(*model, *inference, prompt_tokens, abs_pos, *pool, *inner_pool, stream_token, accept_token, gen, 1);
+
+    GenerateGemma(*model, inference->max_tokens, inference->max_generated_tokens,
+                  inference->temperature, prompt_tokens, abs_pos, kv_cache, *pool, *inner_pool,
+                  stream_token, accept_token, gen, 1);
+
+
     Rcpp::Rcout << std::endl << std::endl;
 
     std::string res = cur_response.str();
@@ -342,10 +356,10 @@ struct gemma_interface {
 
   std::string get_last_raw_prompt() {
     std::string res;
-    auto& tokenizer = model->Tokenizer();
+    auto const& tokenizer = model->Tokenizer();
 
     std::string token_text;
-    HWY_ASSERT(tokenizer.Decode(prompt_tokens, &token_text).ok());
+    HWY_ASSERT(tokenizer->Decode(prompt_tokens, &token_text).ok());
 
     return token_text;
   }
