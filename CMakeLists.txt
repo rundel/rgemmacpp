@@ -9,7 +9,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
-FetchContent_Declare(gemma GIT_REPOSITORY https://github.com/google/gemma.cpp GIT_TAG origin/main)
+FetchContent_Declare(
+  gemma
+  GIT_REPOSITORY https://github.com/google/gemma.cpp
+  GIT_TAG 8fb44ed6dd123f63dca95c20c561e8ca1de511d7 # Release v0.1.1
+  #GIT_TAG origin/main
+)
 FetchContent_GetProperties(gemma)
 if(NOT gemma_POPULATED)
   FetchContent_Populate(gemma)

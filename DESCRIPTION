@@ -1,6 +1,6 @@
 Package: rgemmacpp
 Title: Wrapper for the gemma.cpp C++ library
-Version: 0.2.0.0
+Version: 0.1.1.0
 Authors@R: 
     person("Colin", "Rundel", role = c("aut", "cre"),
            email = "rundel@gmail.com")
